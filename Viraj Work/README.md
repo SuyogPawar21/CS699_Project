@@ -1,1 +1,1 @@
-My name is viraj shete and i am from india and i am proud to be indian
+I am doing CS699 software lab project and this is creating merge conflit
