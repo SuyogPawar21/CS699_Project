@@ -5,7 +5,9 @@ I am using Selenium and undetected chromedriver instead of BeautifulSoup because
     The list of newest papers is populated after the page loads via JavaScript (AJAX).
     ⏩Cloudflare bot protection can detect and block automated browsers; Selenium alone is often detected and does not reliably bypass Cloudflare, so I use undetected_chromedriver to run a Chrome instance that is harder for Cloudflare to flag.
 
-'''python
+
+
+```python
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -60,15 +62,9 @@ for span in paper_spans:
         full_link = "https://dl.acm.org" + a_tag["href"]
         paper_links.append((full_link, a_tag.text.strip()))
 
-# paper_links1 = [("https://dl.acm.org/doi/10.1145/3706599.3719964", "Viraj")]
 # Visit each link to extract authors
 for link, title in paper_links:
     driver.get(link)
-
-    # Wait until at least one dropBlock element is present
-    # WebDriverWait(driver, 20).until(
-    #     EC.presence_of_element_located((By.CLASS_NAME, "dropBlock"))
-    # )
 
     try:
         element = WebDriverWait(driver, 20).until(
@@ -106,12 +102,11 @@ for link, title in paper_links:
 
     Paper_Citations.append(citation_value)
 
-
-
 driver.quit()
 
 # Create DataFrame
 df = pd.DataFrame({"Paper Name": Paper_Name, "Paper Author": Paper_Author,"Paper Citations":Paper_Citations})
 print(df)
+```
 
-'''
+
