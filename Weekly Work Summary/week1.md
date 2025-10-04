@@ -1,9 +1,9 @@
 This week for project progress we have done Web scraping of conference website acm. we face some issues like when we try to scrap acm website using requests and beautifulsoup it dosent give us 200 response so,<br>
 I am using Selenium and undetected chromedriver instead of BeautifulSoup because:<br>
-    <tab>⏩The ACM search page loads content dynamically using JavaScript.<br>
-    <tab>⏩requests.get() or BeautifulSoup alone can only fetch static HTML.
+    -⏩The ACM search page loads content dynamically using JavaScript.<br>
+    -⏩requests.get() or BeautifulSoup alone can only fetch static HTML.
     The list of newest papers is populated after the page loads via JavaScript (AJAX).<br>
-    <tab>⏩Cloudflare bot protection can detect and block automated browsers; Selenium alone is often detected and does not reliably bypass Cloudflare, so I use undetected_chromedriver to run a Chrome instance that is harder for Cloudflare to flag.
+    -⏩Cloudflare bot protection can detect and block automated browsers; Selenium alone is often detected and does not reliably bypass Cloudflare, so I use undetected_chromedriver to run a Chrome instance that is harder for Cloudflare to flag.
 
 
 
