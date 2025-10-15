@@ -1,6 +1,6 @@
 as part of our project we have scrap three websites and in this part i have scrap ieee website using selenium and beautifulsoup as webpages are client side executing i have used selenium WebDriverWait() method to wait till time we get html parse page of that javascript page then once we get html parse page then we can simply scrap it using beautifulsoup also pages were too complicated so what i did is first i took the links and names of conference papers then once i have link in one array (instead of getting driver everytime inside that link then doing driver.back() which will take more time) then i visit that page get all metadata that i need then i direclty cutt down the connection as i dont need it anymore.similaryly i visit all pages and get all metadata that i need.
 
-'''python
+```python
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -106,4 +106,4 @@ driver.quit()
 
 df = pd.DataFrame({"Paper Name": Paper_Name, "Paper Author": Paper_Author,"Paper Citations":Paper_Citations,"Paper Keywords":Paper_Keywords})
 df.to_csv("metadata.csv", index=False)
-'''
+```
