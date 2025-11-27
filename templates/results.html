@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head>    
+<meta charset="utf-8" />    
+<title>Results</title>    
+<meta name="viewport" content="width=device-width, initial-scale=1" />    
+
+</head>
+    <link rel="stylesheet" href="static/css/style_result.css">
+</head>
+<body>    
+    <div class="results_gallery">        
+        <div class="results_title">Paper Trend Visualizations</div>        
+        <div class="results_subtitle">Click on any image to view fullscreen</div>        
+        <div class="results_card">            
+            <img src="{{ url_for('static', filename='plots/keyword_heatmap.png') }}" onclick="zoom(this)">            
+            <div class="results_caption">Representation of Keyword Heatmap</div>        
+            </div>        
+            <div class="results_card">            
+                <img src="{{ url_for('static', filename='plots/similarity_pie_with_legend.png') }}" onclick="zoom(this)">            
+                <div class="results_caption">Distribution of Keyword Similarity</div>        
+                </div>        
+                <div class="results_card">            
+                    <img src="{{ url_for('static', filename='plots/top_papers_by_composite.png') }}" onclick="zoom(this)">            
+                    <div class="results_caption">Highest Ranked Composite Papers</div>        
+                    </div>        
+                    <div class="table_section-title">Summary of K-Means Clustering</div>        
+                    <div class="table_subtitle">View of papers and features grouped from the analysis.</div>        
+                    <div class="table_wrapper">            
+                        <table class="kmeans-table">                
+                            <thead>                    
+                                <tr>                        
+                                    {% for col in columns %}                            
+                                    <th>{{ col }}</th>                        
+                                    {% endfor %}                    
+                                    </tr>                
+                                    </thead>                
+                                    <tbody>                    
+                                        {% for row in table_data %}                        
+                                        <tr>                            
+                                            {% for col in columns %}                                
+                                            <td>{{ row[col] }}</td>                            
+                                            {% endfor %}                        
+                                            </tr>                    
+                                            {% endfor %}                
+                                            </tbody>            
+                                            </table>        
+                                            </div>    
+                                            </div>    
+                                            <div id="image_modal" onclick="closeZoom()">        
+                                                <img id="modalImage">        
+                                                <div class="closeText">Click anywhere or press ESC to close</div>    
+                                                </div>    
+                                                <script>        
+                                                function zoom(img) {            
+                                                    document.getElementById("modalImage").src = img.src;            
+                                                    document.getElementById("image_modal").classList.add("active");       
+                                                 }        
+                                                 
+                                                 function closeZoom(){            
+                                                    document.getElementById("image_modal").classList.remove("active");        }  
+                                                    document.addEventListener("keydown", e => {            
+                                                        if (e.key === "Escape") closeZoom();
+                                                    });  
+                                                </script>
+</body>
+</html>

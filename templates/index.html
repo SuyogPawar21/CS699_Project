@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Research Finder</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="static/css/style_index.css">
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="container row">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='globe_icon.png') }}" alt="logo" class="logo" />
+          <div>
+            <h1>Research Finder</h1>
+            <p class="muted">
+              Find new research and visualise trending topics &amp; authors
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container hero">
+      <div class="layout">
+        <div class="card hero-left">
+          <h2>Search recent papers</h2>
+          <p class="muted">
+            Enter a keyword and select quarter &amp; year.
+          </p>
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
+
+          <div id="clientFlash" class="flash-client" role="status"></div>
+
+          <form
+            id="searchForm"
+            action="{{ url_for('search') }}"
+            method="post"
+            class="form-grid"
+            autocomplete="off"
+          >
+            <div style="grid-column: 1 / -1;">
+              <label for="keyword">Keyword</label>
+              <input
+                type="text"
+                id="keyword"
+                name="keyword"
+                placeholder="e.g. transformers, diffusion models, climate change"
+                required
+              />
+            </div>
+
+            <div>
+              <label for="quarter">Quarter (1-3)</label>
+              <select id="quarter" name="quarter" required>
+                <option value="1">Q1 (Jan-Apr)</option>
+                <option value="2">Q2 (May-Aug)</option>
+                <option value="3">Q3 (Sep-Dec)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="year">Year</label>
+              <input
+                type="number"
+                id="year"
+                name="year"
+                min="2000"
+                max="2100"
+                value="{{ current_year if current_year is defined else 2025 }}"
+                required
+              />
+            </div>
+
+            <div class="actions" style="grid-column: 1 / -1;">
+              <button type="submit" class="btn primary" id="fetchBtn">
+                Fetch &amp; Analyze
+              </button>
+
+              <a
+                id="findTrendsBtn"
+                href="{{ url_for('results') }}"
+                class="btn secondary disabled"
+                style="margin-left: auto;"
+              >
+                Get trends
+              </a>
+            </div>
+          </form>
+
+          <p class="hint">
+            Tip: Use specific keywords, e.g. "graph neural networks" instead of just "AI".
+          </p>
+        </div>
+
+        <aside class="card pipeline" id="pipelinePanel">
+          <h3>Processing pipeline</h3>
+
+          <div class="steps">
+            <div class="step" id="step-1">
+              <span class="dot"></span>
+              <div>
+                <b>Start — Fetch &amp; Analyze</b>
+                <p class="muted">Your request is accepted.</p>
+              </div>
+            </div>
+
+            <div class="step" id="step-2">
+              <span class="dot"></span>
+              <div>
+                <b>Web scraping</b>
+                <p class="muted">Scraping ACM, IEEE, arXiv.</p>
+              </div>
+            </div>
+
+            <div class="step" id="step-3">
+              <span class="dot"></span>
+              <div>
+                <b>Database creation</b>
+                <p class="muted">Merging tables and building the final database.</p>
+              </div>
+            </div>
+
+            <div class="step" id="step-4">
+              <span class="dot"></span>
+              <div>
+                <b>Data analysis and plot generation</b>
+                <p class="muted">Doing data analysis and generating plots.</p>
+              </div>
+            </div>
+
+            <div class="step" id="step-5">
+              <span class="dot"></span>
+              <div>
+                <b>Done — Ready to view</b>
+                <p class="muted">Click "Get trends"</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="status-text" id="statusText">Idle</p>
+        </aside>
+      </div>
+    </main>
+
+    <script>
+      const resultsUrl = "{{ url_for('results') }}";
+
+      function update_pipeline_UI(data) {
+        const steps = [1, 2, 3, 4, 5];
+        let completedCount = 0;
+
+        steps.forEach((n) => {
+            const stepEl = document.getElementById(`step-${n}`);
+            if (!stepEl) return;
+
+            if (data[`step${n}`]) {
+                stepEl.classList.add("completed");
+                completedCount++;
+            } else {
+                stepEl.classList.remove("completed");
+            }
+        });
+
+        document.getElementById("progressFill").style.width =
+            (completedCount / steps.length) * 100 + "%";
+
+        if (data.message) {
+            document.getElementById("statusText").textContent = data.message;
+        }
+
+        const findTrendsBtn = document.getElementById("findTrendsBtn");
+        if (data.step5 && findTrendsBtn) {
+            findTrendsBtn.classList.remove("disabled");
+            findTrendsBtn.classList.remove("secondary");
+            findTrendsBtn.classList.add("primary");
+        }
+}
+      let pipelinePolling = null;
+
+      function start_pipeline_polling() {
+        if (pipelinePolling) return; 
+
+        async function poll() {
+          try {
+            const res = await fetch("/pipeline-status", { cache: "no-store" });
+            if (res.ok) {
+              const data = await res.json();
+              update_pipeline_UI(data);
+            }
+          } catch (err) {
+            console.error("Error fetching pipeline status:", err);
+          } finally {
+            pipelinePolling = setTimeout(poll, 1000);
+          }
+        }
+
+        poll();
+      }
+    </script>
+
+    <footer class="container footer">
+      <small>Made with ❤️ — Scraping + SQLite + Visualisations for paper trends.</small>
+    </footer>
+
+    <script>
+      const form = document.getElementById("searchForm");
+      const fetchBtn = document.getElementById("fetchBtn");
+      const exampleBtn = document.getElementById("exampleBtn");
+      const pipelinePanel = document.getElementById("pipelinePanel");
+      const clientFlash = document.getElementById("clientFlash");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        clientFlash.style.display = "none";
+        fetchBtn.disabled = true;
+        fetchBtn.classList.add("loading");
+
+        pipelinePanel.classList.add("visible");
+
+        document.getElementById("progressFill").style.width = "0%";
+        document.getElementById("statusText").textContent = "Starting…";
+        document
+          .querySelectorAll(".pipeline .step")
+          .forEach((el) => el.classList.remove("completed"));
+
+        start_pipeline_polling();
+
+        try {
+          const formData = new FormData(form);
+          const resp = await fetch(form.action, {
+            method: "POST",
+            body: formData,
+            credentials: "same-origin",
+          });
+
+          if (!resp.ok && resp.status !== 302 && resp.status !== 200) {
+            const txt = await resp.text().catch(() => "");
+            console.error("Server error starting job:", txt);
+            clientFlash.style.display = "block";
+            clientFlash.textContent = "Server error starting job.";
+            fetchBtn.disabled = false;
+            fetchBtn.classList.remove("loading");
+          }
+        } catch (err) {
+          console.error("Network error:", err);
+          clientFlash.style.display = "block";
+          clientFlash.textContent = "Network error contacting server.";
+          fetchBtn.disabled = false;
+          fetchBtn.classList.remove("loading");
+        }
+      });
+
+      exampleBtn.addEventListener("click", () => {
+        document.getElementById("keyword").value = "transformers";
+        document.getElementById("quarter").value = "1";
+        document.getElementById("year").value = new Date().getFullYear();
+      });
+    </script>
+  </body>
+</html>
